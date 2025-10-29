@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import { io } from 'socket.io-client';
 import { Chart } from 'chart.js/auto';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://zcezahdnvfaemarwdhdw.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjZXphaGRudmZhZW1hcndkaGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3NDg1NTYsImV4cCI6MjA3NzMyNDU1Nn0.jVzTKifZ8irV0_ObLmRBBxKgK8AS6Jq-YqgOauPtVM0';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
