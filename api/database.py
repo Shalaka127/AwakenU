@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 SUPABASE_URL = os.getenv("VITE_SUPABASE_URL")
-SUPABASE_ANON_KEY = os.getenv("VITE_SUPABASE_SUPABASE_ANON_KEY")
+SUPABASE_ANON_KEY = os.getenv("VITE_SUPABASE_ANON_KEY")
 
 def get_supabase_client() -> Client:
     if not SUPABASE_URL or not SUPABASE_ANON_KEY:

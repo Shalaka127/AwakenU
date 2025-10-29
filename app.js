@@ -1,6 +1,68 @@
 const SUPABASE_URL = 'https://zcezahdnvfaemarwdhdw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjZXphaGRudmZhZW1hcndkaGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3NDg1NTYsImV4cCI6MjA3NzMyNDU1Nn0.jVzTKifZ8irV0_ObLmRBBxKgK8AS6Jq-YqgOauPtVM0';
-const API_BASE_URL = '';
+
+const positiveWords = new Set([
+    'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'awesome',
+    'love', 'best', 'perfect', 'happy', 'joy', 'beautiful', 'brilliant', 'outstanding',
+    'superb', 'delightful', 'pleased', 'excited', 'fabulous', 'incredible', 'marvelous'
+]);
+
+const negativeWords = new Set([
+    'bad', 'terrible', 'awful', 'horrible', 'poor', 'worst', 'hate', 'disappointed',
+    'disappointing', 'sad', 'angry', 'frustrating', 'annoying', 'pathetic', 'useless',
+    'waste', 'disgusting', 'dreadful', 'miserable', 'appalling', 'inferior', 'unacceptable'
+]);
+
+function analyzeSentimentLocal(text) {
+    if (!text || text.trim().length === 0) {
+        return {
+            score: 0.0,
+            label: 'neutral',
+            confidence: 0.5,
+            metadata: { word_count: 0, positive_words: 0, negative_words: 0 }
+        };
+    }
+
+    const words = text.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(w => w);
+    let positiveCount = 0;
+    let negativeCount = 0;
+
+    words.forEach(word => {
+        if (positiveWords.has(word)) positiveCount++;
+        if (negativeWords.has(word)) negativeCount++;
+    });
+
+    const totalSentimentWords = positiveCount + negativeCount;
+    let sentimentScore = 0.0;
+    let label = 'neutral';
+    let confidence = 0.5;
+
+    if (totalSentimentWords > 0) {
+        sentimentScore = (positiveCount - negativeCount) / totalSentimentWords;
+
+        if (sentimentScore > 0.3) {
+            label = 'positive';
+            confidence = Math.min(0.95, 0.6 + (sentimentScore * 0.3));
+        } else if (sentimentScore < -0.3) {
+            label = 'negative';
+            confidence = Math.min(0.95, 0.6 + (Math.abs(sentimentScore) * 0.3));
+        } else {
+            label = 'neutral';
+            confidence = 0.5 + (0.3 * (1 - Math.abs(sentimentScore)));
+        }
+    }
+
+    return {
+        score: Math.max(-1.0, Math.min(1.0, sentimentScore)),
+        label: label,
+        confidence: confidence,
+        metadata: {
+            word_count: words.length,
+            positive_words: positiveCount,
+            negative_words: negativeCount
+        }
+    };
+}
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -172,21 +234,33 @@ async function showDashboard() {
 
 async function loadUserStats() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/stats`, {
-            headers: {
-                'Authorization': `Bearer ${authToken}`
-            }
-        });
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', currentUser.id)
+            .maybeSingle();
 
-        if (!response.ok) throw new Error('Failed to load stats');
+        if (userError) throw userError;
 
-        const stats = await response.json();
-        elements.totalAnalyses.textContent = stats.total_analyses;
-        elements.apiCallsRemaining.textContent = stats.api_calls_remaining;
-        elements.subscriptionTier.textContent = stats.subscription_tier;
+        const { data: analyses, error: analysesError, count } = await supabase
+            .from('sentiment_analyses')
+            .select('*', { count: 'exact' })
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false })
+            .limit(5);
 
-        if (stats.total_analyses > 0 && stats.recent_analyses.length > 0) {
-            updateChart(stats.recent_analyses);
+        if (analysesError) throw analysesError;
+
+        elements.totalAnalyses.textContent = count || 0;
+        elements.apiCallsRemaining.textContent = userData?.api_calls_remaining || 0;
+        elements.subscriptionTier.textContent = userData?.subscription_tier || 'free';
+
+        if (count > 0 && analyses.length > 0) {
+            const formattedAnalyses = analyses.map(a => ({
+                sentiment_score: a.sentiment_score,
+                text: a.text_content
+            }));
+            updateChart(formattedAnalyses);
         }
     } catch (error) {
         console.error('Error loading stats:', error);
@@ -195,16 +269,21 @@ async function loadUserStats() {
 
 async function loadHistory() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/analyses?limit=10`, {
-            headers: {
-                'Authorization': `Bearer ${authToken}`
-            }
-        });
+        const { data: analyses, error } = await supabase
+            .from('sentiment_analyses')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false })
+            .limit(10);
 
-        if (!response.ok) throw new Error('Failed to load history');
+        if (error) throw error;
 
-        const analyses = await response.json();
-        renderHistory(analyses);
+        const formattedAnalyses = analyses.map(a => ({
+            text: a.text_content,
+            sentiment_label: a.sentiment_label,
+            created_at: a.created_at
+        }));
+        renderHistory(formattedAnalyses);
     } catch (error) {
         console.error('Error loading history:', error);
         elements.historyList.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No analyses yet</p>';
@@ -240,21 +319,48 @@ elements.analyzeBtn.addEventListener('click', async () => {
     elements.analyzeBtn.innerHTML = '<span class="loading"></span>';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/analyze`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ text })
-        });
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', currentUser.id)
+            .maybeSingle();
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Analysis failed');
+        if (userError) throw userError;
+        if (!userData) throw new Error('User not found');
+
+        if (userData.api_calls_remaining <= 0) {
+            throw new Error('API call limit reached. Please upgrade your plan.');
         }
 
-        const result = await response.json();
+        const sentimentResult = analyzeSentimentLocal(text);
+
+        const { data: analysisData, error: insertError } = await supabase
+            .from('sentiment_analyses')
+            .insert([{
+                user_id: currentUser.id,
+                text_content: text,
+                sentiment_score: sentimentResult.score,
+                sentiment_label: sentimentResult.label,
+                confidence: sentimentResult.confidence,
+                metadata: sentimentResult.metadata
+            }])
+            .select()
+            .single();
+
+        if (insertError) throw insertError;
+
+        await supabase
+            .from('users')
+            .update({ api_calls_remaining: userData.api_calls_remaining - 1 })
+            .eq('id', currentUser.id);
+
+        const result = {
+            sentiment_score: analysisData.sentiment_score,
+            sentiment_label: analysisData.sentiment_label,
+            confidence: analysisData.confidence,
+            metadata: analysisData.metadata
+        };
+
         displayResult(result);
         await loadUserStats();
         await loadHistory();
