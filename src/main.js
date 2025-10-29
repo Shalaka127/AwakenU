@@ -698,7 +698,7 @@ function showMessage(text, type) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initApp() {
     console.log('App initializing...');
 
     const loginPage = document.getElementById('loginPage');
@@ -722,4 +722,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Initialization error:', error);
         renderLoginPage();
     }
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
