@@ -66,6 +66,12 @@ function renderLoginPage() {
                 Client: client@example.com / client123<br>
                 Admin: admin@sentily.com / admin123
             </div>
+
+            <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(139, 92, 246, 0.2);">
+                <p style="color: #a8a3b8; font-size: 14px;">
+                    Don't have an account? <a href="#" id="showSignup" style="color: #8b5cf6; text-decoration: none; font-weight: 600;">Sign up</a>
+                </p>
+            </div>
         </div>
     `;
 
@@ -80,7 +86,137 @@ function renderLoginPage() {
     const googleBtn = document.querySelector('.btn-google');
     googleBtn.addEventListener('click', handleGoogleSignIn);
 
+    const signupLink = document.getElementById('showSignup');
+    signupLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        renderSignupPage();
+    });
+
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
+}
+
+function renderSignupPage() {
+    const loginPage = document.getElementById('loginPage');
+    loginPage.innerHTML = `
+        <div class="auth-card">
+            <div class="auth-logo">
+                <div class="auth-logo-icon">📊</div>
+            </div>
+            <h1 class="auth-title">AwakenU</h1>
+            <p class="auth-subtitle">Create your account to get started.</p>
+
+            <div id="authMessage" class="message" style="display: none;"></div>
+
+            <form id="signupForm">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" id="signupName" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="signupEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="signupPassword" placeholder="Create a password (min 6 characters)" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Organization Name</label>
+                    <input type="text" class="form-input" id="signupOrg" placeholder="Enter your organization name" required>
+                </div>
+                <button type="submit" class="btn">Create Account</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(139, 92, 246, 0.2);">
+                <p style="color: #a8a3b8; font-size: 14px;">
+                    Already have an account? <a href="#" id="showLogin" style="color: #8b5cf6; text-decoration: none; font-weight: 600;">Sign in</a>
+                </p>
+            </div>
+        </div>
+    `;
+
+    const loginLink = document.getElementById('showLogin');
+    loginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        renderLoginPage();
+    });
+
+    document.getElementById('signupForm').addEventListener('submit', handleSignup);
+}
+
+async function handleSignup(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const orgName = document.getElementById('signupOrg').value.trim();
+
+    try {
+        showMessage('Creating your account...', 'info');
+
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: name,
+                    organization_name: orgName
+                }
+            }
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+            const orgSlug = orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const orgDomain = email.split('@')[1];
+
+            const { data: tenant, error: tenantError } = await supabase
+                .from('tenants')
+                .insert({
+                    name: orgName,
+                    slug: orgSlug,
+                    domain: orgDomain,
+                    is_active: true
+                })
+                .select()
+                .single();
+
+            if (tenantError) throw tenantError;
+
+            const { error: userError } = await supabase
+                .from('users')
+                .insert({
+                    id: data.user.id,
+                    email: email,
+                    full_name: name
+                });
+
+            if (userError) throw userError;
+
+            const { error: memberError } = await supabase
+                .from('tenant_memberships')
+                .insert({
+                    user_id: data.user.id,
+                    tenant_id: tenant.id,
+                    role: 'admin',
+                    is_active: true
+                });
+
+            if (memberError) throw memberError;
+
+            showMessage('Account created successfully! Signing you in...', 'success');
+
+            setTimeout(async () => {
+                currentUser = data.user;
+                await loadDashboard();
+            }, 1500);
+        }
+    } catch (error) {
+        console.error('Signup error:', error);
+        showMessage(error.message, 'error');
+    }
 }
 
 async function handleLogin(e) {
@@ -107,15 +243,21 @@ async function handleGoogleSignIn() {
 
 async function loadDashboard() {
     try {
-        const { data: membership } = await supabase
+        const { data: membership, error } = await supabase
             .from('tenant_memberships')
             .select('tenant_id, role, tenants(name)')
             .eq('user_id', currentUser.id)
             .eq('is_active', true)
-            .single();
+            .maybeSingle();
+
+        if (error) {
+            console.error('Membership query error:', error);
+            showMessage('Error loading tenant: ' + error.message, 'error');
+            return;
+        }
 
         if (!membership) {
-            showMessage('No tenant found', 'error');
+            showMessage('No tenant found for your account. Please contact support.', 'error');
             return;
         }
 
