@@ -77,6 +77,9 @@ function renderLoginPage() {
         });
     });
 
+    const googleBtn = document.querySelector('.btn-google');
+    googleBtn.addEventListener('click', handleGoogleSignIn);
+
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
 }
 
@@ -96,6 +99,10 @@ async function handleLogin(e) {
     } catch (error) {
         showMessage(error.message, 'error');
     }
+}
+
+async function handleGoogleSignIn() {
+    showMessage('Google Sign-In is not configured yet. Please use the demo credentials below to sign in.', 'info');
 }
 
 async function loadDashboard() {
