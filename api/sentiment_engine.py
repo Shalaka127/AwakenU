@@ -1,6 +1,5 @@
 import re
 from typing import Dict
-import numpy as np
 
 positive_words = {
     'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'awesome',
