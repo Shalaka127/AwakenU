@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Demo Users - AwakenU</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { color: #667eea; margin-bottom: 10px; }
+        h2 { color: #333; font-size: 18px; margin: 30px 0 15px; }
+        p { color: #666; margin-bottom: 20px; line-height: 1.6; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .loading { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .credentials {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AwakenU Setup</h1>
+        <p>Click the buttons below to create demo user accounts. This only needs to be done once.</p>
+
+        <div id="status"></div>
+
+        <h2>Step 1: Create Client User</h2>
+        <div class="credentials">
+            Email: client@example.com<br>
+            Password: client123
+        </div>
+        <button id="createClient" onclick="createClientUser()">Create Client User</button>
+
+        <h2>Step 2: Create Admin User</h2>
+        <div class="credentials">
+            Email: admin@sentily.com<br>
+            Password: admin123
+        </div>
+        <button id="createAdmin" onclick="createAdminUser()">Create Admin User</button>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="font-size: 14px;">
+                <strong>Note:</strong> After creating the users, you can <a href="/" style="color: #667eea;">return to the login page</a> and sign in with the credentials above.
+            </p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        const SUPABASE_URL = 'https://zcezahdnvfaemarwdhdw.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjZXphaGRudmZhZW1hcndkaGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3NDg1NTYsImV4cCI6MjA3NzMyNDU1Nn0.jVzTKifZ8irV0_ObLmRBBxKgK8AS6Jq-YqgOauPtVM0';
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        window.createClientUser = async function() {
+            const btn = document.getElementById('createClient');
+            btn.disabled = true;
+            showStatus('Creating client user...', 'loading');
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: 'client@example.com',
+                    password: 'client123',
+                    options: {
+                        emailRedirectTo: window.location.origin,
+                        data: {
+                            role: 'client'
+                        }
+                    }
+                });
+
+                if (error) {
+                    if (error.message.includes('already registered')) {
+                        showStatus('✓ Client user already exists! You can sign in now.', 'info');
+                    } else {
+                        throw error;
+                    }
+                } else if (data.user) {
+                    // Link to tenant
+                    await linkToTenant(data.user.id, '00000000-0000-0000-0000-000000000001', 'member');
+                    showStatus('✓ Client user created successfully! You can now sign in.', 'success');
+                }
+            } catch (err) {
+                showStatus('❌ Error: ' + err.message, 'error');
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        window.createAdminUser = async function() {
+            const btn = document.getElementById('createAdmin');
+            btn.disabled = true;
+            showStatus('Creating admin user...', 'loading');
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: 'admin@sentily.com',
+                    password: 'admin123',
+                    options: {
+                        emailRedirectTo: window.location.origin,
+                        data: {
+                            role: 'admin'
+                        }
+                    }
+                });
+
+                if (error) {
+                    if (error.message.includes('already registered')) {
+                        showStatus('✓ Admin user already exists! You can sign in now.', 'info');
+                    } else {
+                        throw error;
+                    }
+                } else if (data.user) {
+                    // Link to tenant
+                    await linkToTenant(data.user.id, '00000000-0000-0000-0000-000000000002', 'admin');
+                    showStatus('✓ Admin user created successfully! You can now sign in.', 'success');
+                }
+            } catch (err) {
+                showStatus('❌ Error: ' + err.message, 'error');
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        async function linkToTenant(userId, tenantId, role) {
+            try {
+                const { error } = await supabase.rpc('create_demo_user_membership', {
+                    p_user_id: userId,
+                    p_tenant_id: tenantId,
+                    p_role: role
+                });
+
+                if (error) {
+                    console.error('Error linking to tenant:', error);
+                }
+            } catch (err) {
+                console.error('Link error:', err);
+            }
+        }
+    </script>
+</body>
+</html>
