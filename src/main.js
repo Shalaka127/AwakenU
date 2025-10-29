@@ -699,12 +699,21 @@ function showMessage(text, type) {
 }
 
 (async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    console.log('App initializing...');
 
-    if (session) {
-        currentUser = session.user;
-        await loadDashboard();
-    } else {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Session check:', session ? 'Found' : 'None');
+
+        if (session) {
+            currentUser = session.user;
+            await loadDashboard();
+        } else {
+            console.log('Rendering login page...');
+            renderLoginPage();
+        }
+    } catch (error) {
+        console.error('Initialization error:', error);
         renderLoginPage();
     }
 })();
