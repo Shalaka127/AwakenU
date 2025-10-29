@@ -698,14 +698,20 @@ function showMessage(text, type) {
     }
 }
 
-(async () => {
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('App initializing...');
 
-    try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('Session check:', session ? 'Found' : 'None');
+    const loginPage = document.getElementById('loginPage');
+    if (!loginPage) {
+        console.error('loginPage element not found!');
+        return;
+    }
 
-        if (session) {
+    try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('Session check:', session ? 'Found' : 'None', error);
+
+        if (session && !error) {
             currentUser = session.user;
             await loadDashboard();
         } else {
@@ -716,4 +722,4 @@ function showMessage(text, type) {
         console.error('Initialization error:', error);
         renderLoginPage();
     }
-})();
+});
