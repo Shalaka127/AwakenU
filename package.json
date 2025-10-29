@@ -2,10 +2,11 @@
   "name": "awakenu-sentiment-analyzer",
   "version": "1.0.0",
   "type": "module",
+  "main": "index.html",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview --host 0.0.0.0"
   },
   "devDependencies": {
     "vite": "^5.0.0"
