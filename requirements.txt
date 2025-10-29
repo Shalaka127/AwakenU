@@ -1,10 +1,5 @@
 fastapi==0.117.1
 uvicorn==0.37.0
-stripe==12.5.1
-numpy==2.3.3 --only-binary=:all:
-pandas==2.3.2 --only-binary=:all:
-scikit-learn==1.6.1
-scipy==1.16.2 --only-binary=:all:
 python-dotenv==1.0.0
-requests==2.32.5
 pydantic==2.11.9
+supabase==2.3.0

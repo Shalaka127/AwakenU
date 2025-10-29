@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>awakenU - Sentiment Analysis Platform</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --neutral-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            padding: 48px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            max-width: 440px;
+            width: 100%;
+        }
+
+        .auth-card h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .auth-card p {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            font-size: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .auth-switch button {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #fee;
+            color: var(--danger-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #efe;
+            color: var(--success-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .dashboard-container {
+            display: none;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .dashboard-header {
+            background: var(--card-bg);
+            padding: 24px 32px;
+            border-radius: 12px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dashboard-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .btn-secondary {
+            padding: 10px 20px;
+            background: var(--neutral-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+        }
+
+        .analyzer-section {
+            background: var(--card-bg);
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .analyzer-section h2 {
+            font-size: 20px;
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+
+        .text-input {
+            width: 100%;
+            min-height: 150px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 16px;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .result-card {
+            background: var(--neutral-bg);
+            padding: 24px;
+            border-radius: 12px;
+            margin-top: 24px;
+        }
+
+        .sentiment-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .sentiment-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .sentiment-positive {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .sentiment-negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .sentiment-neutral {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .score-bar {
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .score-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .history-section {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .history-section h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .history-item {
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow);
+        }
+
+        .history-item .text-preview {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .history-item .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 32px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-content h2 {
+            font-size: 24px;
+            margin-bottom: 24px;
+        }
+
+        .pricing-option {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pricing-option:hover {
+            border-color: var(--primary-color);
+        }
+
+        .pricing-option.selected {
+            border-color: var(--primary-color);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .pricing-option h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .pricing-option .price {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .pricing-option p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .auth-card {
+                padding: 32px 24px;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .chart-container {
+            margin-top: 24px;
+            background: var(--neutral-bg);
+            padding: 24px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="authContainer" class="auth-container">
+        <div class="auth-card">
+            <h1>awakenU</h1>
+            <p>AI-powered sentiment analysis for your content</p>
+
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+
+            <div id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password">
+                </div>
+                <button class="btn btn-primary" id="loginBtn">Sign In</button>
+                <div class="auth-switch">
+                    Don't have an account? <button id="showSignup">Sign up</button>
+                </div>
+            </div>
+
+            <div id="signupForm" style="display: none;">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signupEmail" placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signupPassword" placeholder="Create a password (min 6 characters)">
+                </div>
+                <button class="btn btn-primary" id="signupBtn">Create Account</button>
+                <div class="auth-switch">
+                    Already have an account? <button id="showLogin">Sign in</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboardContainer" class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>Sentiment Analysis Dashboard</h1>
+            <div class="header-actions">
+                <span id="userEmail" style="color: var(--text-secondary); font-size: 14px;"></span>
+                <button class="btn-secondary" id="logoutBtn">Sign Out</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Analyses</h3>
+                <div class="value" id="totalAnalyses">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>API Calls Remaining</h3>
+                <div class="value" id="apiCallsRemaining">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Subscription</h3>
+                <div class="value" id="subscriptionTier" style="font-size: 20px; text-transform: capitalize;">Free</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="analyzer-section">
+                <h2>Analyze Text</h2>
+                <textarea class="text-input" id="textInput" placeholder="Enter text to analyze sentiment..."></textarea>
+                <button class="btn btn-primary" id="analyzeBtn">Analyze Sentiment</button>
+
+                <div id="resultCard" class="result-card" style="display: none;">
+                    <h3 style="margin-bottom: 16px;">Analysis Result</h3>
+                    <div class="sentiment-indicator">
+                        <span class="sentiment-badge" id="sentimentBadge">Neutral</span>
+                        <span id="confidenceScore" style="font-size: 14px; color: var(--text-secondary);"></span>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-fill" id="scoreFill"></div>
+                    </div>
+                    <div id="metadataInfo" style="font-size: 14px; color: var(--text-secondary); margin-top: 12px;"></div>
+                </div>
+
+                <div class="chart-container" style="display: none;" id="chartContainer">
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Recent Analyses</h2>
+                    <button class="btn-secondary" id="upgradeBtn" style="padding: 8px 16px; font-size: 13px;">Upgrade Plan</button>
+                </div>
+                <div id="historyList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <h2>Upgrade Your Plan</h2>
+            <div class="pricing-option" data-tier="pro" data-price="9.99">
+                <h3>Pro Plan</h3>
+                <div class="price">$9.99<span style="font-size: 16px; font-weight: normal;">/month</span></div>
+                <p>1,000 API calls per month</p>
+            </div>
+            <div class="pricing-option" data-tier="enterprise" data-price="29.99">
+                <h3>Enterprise Plan</h3>
+                <div class="price">$29.99<span style="font-size: 16px; font-weight: normal;">/month</span></div>
+                <p>Unlimited API calls</p>
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="btn btn-primary" id="proceedPayment">Proceed to Payment</button>
+                <button class="btn-secondary" id="closeModal" style="width: 100%;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
