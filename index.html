@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AwakenU - Hybrid Sentiment Analysis Dashboard</title>
-    <link rel="stylesheet" href="/src/styles/main.css">
+    <link rel="stylesheet" href="/src/styles/main.css?v=2.0">
+    <style>
+        /* Inline critical CSS to ensure styles load */
+        body { margin: 0; padding: 0; }
+        #app { min-height: 100vh; }
+    </style>
 </head>
 <body>
     <div id="app">
@@ -17,6 +22,6 @@
         </div>
     </div>
 
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/main.js?v=2.0"></script>
 </body>
 </html>
