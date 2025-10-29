@@ -4,13 +4,22 @@ from typing import Dict
 positive_words = {
     'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'awesome',
     'love', 'best', 'perfect', 'happy', 'joy', 'beautiful', 'brilliant', 'outstanding',
-    'superb', 'delightful', 'pleased', 'excited', 'fabulous', 'incredible', 'marvelous'
+    'superb', 'delightful', 'pleased', 'excited', 'fabulous', 'incredible', 'marvelous',
+    'thank', 'thanks', 'appreciate', 'helpful', 'satisfied', 'pleased', 'resolved'
 }
 
 negative_words = {
     'bad', 'terrible', 'awful', 'horrible', 'poor', 'worst', 'hate', 'disappointed',
     'disappointing', 'sad', 'angry', 'frustrating', 'annoying', 'pathetic', 'useless',
-    'waste', 'disgusting', 'dreadful', 'miserable', 'appalling', 'inferior', 'unacceptable'
+    'waste', 'disgusting', 'dreadful', 'miserable', 'appalling', 'inferior', 'unacceptable',
+    'broken', 'failed', 'error', 'problem', 'issue', 'complaint', 'unhappy'
+}
+
+urgency_keywords = {
+    'urgent', 'immediately', 'asap', 'emergency', 'critical', 'important', 'priority',
+    'now', 'quickly', 'soon', 'deadline', 'time-sensitive', 'right away', 'outage',
+    'down', 'not working', 'broken', 'security', 'breach', 'hack', 'unauthorized',
+    'charge', 'refund', 'billing', 'payment', 'cancel'
 }
 
 intensifiers = {'very', 'extremely', 'really', 'absolutely', 'totally', 'incredibly', 'highly'}
@@ -22,7 +31,7 @@ def preprocess_text(text: str) -> list:
     words = text.split()
     return words
 
-def analyze_sentiment(text: str) -> Dict:
+def classify_sentiment(text: str) -> Dict:
     if not text or len(text.strip()) == 0:
         return {
             "score": 0.0,
@@ -97,3 +106,81 @@ def analyze_sentiment(text: str) -> Dict:
             "sentiment_words_ratio": round(total_sentiment_words / len(words), 3) if len(words) > 0 else 0
         }
     }
+
+def detect_urgency(text: str, metadata: Dict = None) -> Dict:
+    words = preprocess_text(text)
+
+    urgency_count = sum(1 for word in words if word in urgency_keywords)
+    has_exclamation = '!' in text
+    has_caps = sum(1 for c in text if c.isupper()) / len(text) > 0.3 if len(text) > 0 else False
+
+    urgency_score = urgency_count / len(words) if len(words) > 0 else 0
+
+    if has_exclamation:
+        urgency_score += 0.1
+    if has_caps:
+        urgency_score += 0.15
+
+    if urgency_score > 0.15:
+        label = "high"
+        score = min(0.95, 0.7 + urgency_score)
+    elif urgency_score > 0.05:
+        label = "medium"
+        score = 0.5 + urgency_score
+    else:
+        label = "low"
+        score = 0.3
+
+    return {
+        "label": label,
+        "score": round(score, 3)
+    }
+
+def classify_intent(text: str) -> Dict:
+    words = preprocess_text(text)
+
+    complaint_keywords = {'complaint', 'issue', 'problem', 'broken', 'not working', 'error', 'bug'}
+    praise_keywords = {'thank', 'thanks', 'great', 'excellent', 'love', 'appreciate'}
+    question_keywords = {'how', 'what', 'when', 'where', 'why', 'can', 'could', 'would', '?'}
+    request_keywords = {'please', 'need', 'want', 'request', 'can you', 'could you'}
+
+    complaint_score = sum(1 for word in words if word in complaint_keywords)
+    praise_score = sum(1 for word in words if word in praise_keywords)
+    question_score = sum(1 for word in words if word in question_keywords) + (1 if '?' in text else 0)
+    request_score = sum(1 for word in words if word in request_keywords)
+
+    scores = {
+        'complaint': complaint_score,
+        'praise': praise_score,
+        'question': question_score,
+        'request': request_score
+    }
+
+    if max(scores.values()) == 0:
+        return {"label": "general", "score": 0.5}
+
+    intent = max(scores, key=scores.get)
+    confidence = min(0.9, 0.5 + (scores[intent] / len(words)))
+
+    return {
+        "label": intent,
+        "score": round(confidence, 3)
+    }
+
+def calculate_priority(sentiment_score: float, urgency: str, sentiment: str) -> int:
+    priority = 50
+
+    if urgency == "high":
+        priority += 40
+    elif urgency == "medium":
+        priority += 20
+
+    if sentiment == "negative":
+        priority += 20
+    elif sentiment == "positive":
+        priority -= 10
+
+    return min(100, max(0, priority))
+
+def analyze_sentiment(text: str) -> Dict:
+    return classify_sentiment(text)

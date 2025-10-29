@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>awakenU - Sentiment Analysis Platform</title>
+    <title>Customer Support Analytics - Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -12,65 +12,71 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
         }
 
-        .container {
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+        }
+
+        .auth-card {
             background: white;
             padding: 40px;
             border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
             width: 100%;
+            max-width: 420px;
+            margin: 20px;
         }
 
-        h1 {
-            color: #2563eb;
-            margin-bottom: 10px;
-            font-size: 32px;
+        .auth-card h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #0f172a;
         }
 
-        p {
+        .auth-card p {
             color: #64748b;
-            margin-bottom: 30px;
+            margin-bottom: 32px;
         }
 
         .form-group {
             margin-bottom: 20px;
         }
 
-        label {
+        .form-group label {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #0f172a;
+            color: #1e293b;
+            font-size: 14px;
         }
 
-        input, textarea {
+        .form-group input {
             width: 100%;
-            padding: 12px;
+            padding: 12px 16px;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             font-size: 15px;
-            font-family: inherit;
+            transition: all 0.2s;
         }
 
-        input:focus, textarea:focus {
+        .form-group input:focus {
             outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        button {
+        .btn {
             width: 100%;
-            padding: 12px;
-            background: #2563eb;
+            padding: 12px 24px;
+            background: #3b82f6;
             color: white;
             border: none;
             border-radius: 8px;
@@ -80,262 +86,476 @@
             transition: all 0.2s;
         }
 
-        button:hover {
-            background: #1d4ed8;
+        .btn:hover {
+            background: #2563eb;
             transform: translateY(-1px);
         }
 
-        button:disabled {
+        .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
 
-        .result {
-            margin-top: 20px;
-            padding: 20px;
-            background: #f8fafc;
-            border-radius: 8px;
-            display: none;
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
         }
 
-        .sentiment-badge {
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .positive { background: #dcfce7; color: #15803d; }
-        .negative { background: #fee2e2; color: #991b1b; }
-        .neutral { background: #f1f5f9; color: #475569; }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            background: none;
-            border: none;
-            border-bottom: 2px solid transparent;
-            color: #64748b;
-            cursor: pointer;
-            font-weight: 500;
-            margin-bottom: -2px;
-        }
-
-        .tab.active {
-            color: #2563eb;
-            border-bottom-color: #2563eb;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
+        .btn-secondary:hover {
+            background: #e2e8f0;
         }
 
         .message {
-            padding: 12px;
+            padding: 12px 16px;
             border-radius: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
+            font-size: 14px;
             display: none;
         }
 
-        .error { background: #fee; color: #ef4444; display: block; }
-        .success { background: #efe; color: #10b981; display: block; }
+        .message.error {
+            background: #fef2f2;
+            color: #991b1b;
+            display: block;
+        }
+
+        .message.success {
+            background: #f0fdf4;
+            color: #15803d;
+            display: block;
+        }
+
+        .dashboard {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .dashboard.active {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 24px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            padding: 0 24px 24px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .nav-item {
+            padding: 12px 24px;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .nav-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .header {
+            margin-bottom: 32px;
+        }
+
+        .header h2 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #64748b;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .stat-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .badge-positive {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .badge-negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-neutral {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .badge-high {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-low {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0f172a;
+        }
+
+        .feedback-item {
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .feedback-item:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+        }
+
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .feedback-subject {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .feedback-sender {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .feedback-body {
+            font-size: 14px;
+            color: #475569;
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .feedback-meta {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-small:hover {
+            background: #2563eb;
+        }
+
+        .satisfied-mark {
+            background: #dcfce7;
+            color: #15803d;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #475569;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard.active {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>awakenU</h1>
-        <p>AI-powered sentiment analysis for your content</p>
+    <div id="authPage" class="auth-page">
+        <div class="auth-card">
+            <h1>Customer Support Analytics</h1>
+            <p>Sign in to your account</p>
 
-        <div id="message" class="message"></div>
+            <div id="authMessage" class="message"></div>
 
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('analyze')">Analyze</button>
-            <button class="tab" onclick="showTab('login')">Login</button>
-            <button class="tab" onclick="showTab('signup')">Sign Up</button>
-            <button class="tab" onclick="showTab('upgrade')">Upgrade</button>
+            <div id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password">
+                </div>
+                <button class="btn" onclick="login()">Sign In</button>
+                <button class="btn btn-secondary" style="margin-top: 12px;" onclick="showSignup()">Create Account</button>
+            </div>
+
+            <div id="signupForm" style="display: none;">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signupEmail" placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signupPassword" placeholder="Minimum 6 characters">
+                </div>
+                <div class="form-group">
+                    <label>Organization Name</label>
+                    <input type="text" id="orgName" placeholder="Your Company">
+                </div>
+                <button class="btn" onclick="signup()">Create Account</button>
+                <button class="btn btn-secondary" style="margin-top: 12px;" onclick="showLogin()">Back to Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboardPage" class="dashboard">
+        <div class="sidebar">
+            <div class="logo">Support Analytics</div>
+            <div class="nav-item active" onclick="showSection('overview')">Dashboard</div>
+            <div class="nav-item" onclick="showSection('feedback')">Feedback Items</div>
+            <div class="nav-item" onclick="showSection('integrations')">Integrations</div>
+            <div class="nav-item" onclick="showSection('settings')">Settings</div>
+            <div class="nav-item" style="margin-top: auto;" onclick="logout()">Sign Out</div>
         </div>
 
-        <div id="analyze-tab" class="tab-content active">
-            <div class="form-group">
-                <label>Enter text to analyze</label>
-                <textarea id="textInput" rows="5" placeholder="Type or paste your text here..."></textarea>
-            </div>
-            <button onclick="analyzeSentiment()">Analyze Sentiment</button>
+        <div class="main-content">
+            <div id="overviewSection">
+                <div class="header">
+                    <h2>Dashboard Overview</h2>
+                    <p>Real-time analytics of your customer support feedback</p>
+                </div>
 
-            <div id="result" class="result">
-                <div id="sentimentBadge" class="sentiment-badge">Neutral</div>
-                <p><strong>Score:</strong> <span id="score">0.00</span></p>
-                <p><strong>Confidence:</strong> <span id="confidence">0%</span></p>
-                <p><strong>Words:</strong> <span id="words">0</span></p>
-            </div>
-        </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Feedback</div>
+                        <div class="stat-value" id="totalFeedback">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Positive Sentiment</div>
+                        <div class="stat-value" id="positiveFeedback">0</div>
+                        <span class="stat-badge badge-positive">Good</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Negative Sentiment</div>
+                        <div class="stat-value" id="negativeFeedback">0</div>
+                        <span class="stat-badge badge-negative">Needs Attention</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">High Priority</div>
+                        <div class="stat-value" id="highUrgency">0</div>
+                        <span class="stat-badge badge-high">Urgent</span>
+                    </div>
+                </div>
 
-        <div id="login-tab" class="tab-content">
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="loginEmail" placeholder="your@email.com">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="loginPassword" placeholder="Enter password">
-            </div>
-            <button onclick="login()">Sign In</button>
-        </div>
-
-        <div id="signup-tab" class="tab-content">
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="signupEmail" placeholder="your@email.com">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="signupPassword" placeholder="Min 6 characters">
-            </div>
-            <button onclick="signup()">Create Account</button>
-        </div>
-
-        <div id="upgrade-tab" class="tab-content">
-            <h3 style="margin-bottom: 20px;">Choose Your Plan</h3>
-
-            <div style="border: 2px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 15px; cursor: pointer;" onclick="selectPlan('pro', 9.99)" id="pro-plan">
-                <h4 style="margin-bottom: 10px;">Pro Plan</h4>
-                <p style="font-size: 28px; font-weight: 700; color: #2563eb; margin-bottom: 10px;">$9.99<span style="font-size: 16px; font-weight: normal;">/month</span></p>
-                <p style="color: #64748b; font-size: 14px;">1,000 analyses per month</p>
+                <div class="card">
+                    <h3>Recent Feedback</h3>
+                    <div id="recentFeedback"></div>
+                </div>
             </div>
 
-            <div style="border: 2px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 20px; cursor: pointer;" onclick="selectPlan('enterprise', 29.99)" id="enterprise-plan">
-                <h4 style="margin-bottom: 10px;">Enterprise Plan</h4>
-                <p style="font-size: 28px; font-weight: 700; color: #2563eb; margin-bottom: 10px;">$29.99<span style="font-size: 16px; font-weight: normal;">/month</span></p>
-                <p style="color: #64748b; font-size: 14px;">Unlimited analyses</p>
+            <div id="feedbackSection" style="display: none;">
+                <div class="header">
+                    <h2>Feedback Items</h2>
+                    <p>View and manage customer support messages</p>
+                </div>
+
+                <div class="filters">
+                    <button class="filter-btn active" onclick="filterFeedback('all')">All</button>
+                    <button class="filter-btn" onclick="filterFeedback('positive')">Positive</button>
+                    <button class="filter-btn" onclick="filterFeedback('negative')">Negative</button>
+                    <button class="filter-btn" onclick="filterFeedback('neutral')">Neutral</button>
+                    <button class="filter-btn" onclick="filterFeedback('high')">High Priority</button>
+                </div>
+
+                <div class="card">
+                    <div id="feedbackList"></div>
+                </div>
             </div>
 
-            <button onclick="processStripePayment()" id="paymentBtn">Proceed with Stripe Payment</button>
-            <p style="text-align: center; margin-top: 15px; font-size: 13px; color: #64748b;">Secure payment powered by Stripe</p>
+            <div id="integrationsSection" style="display: none;">
+                <div class="header">
+                    <h2>Email Integrations</h2>
+                    <p>Connect your email providers to automatically ingest support messages</p>
+                </div>
+
+                <div class="card">
+                    <h3>Active Integrations</h3>
+                    <div id="integrationsList">
+                        <div class="empty-state">
+                            <p>No integrations connected yet</p>
+                            <p style="font-size: 13px; margin-top: 8px;">Connect SendGrid, Gmail, or Outlook to start receiving feedback</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="settingsSection" style="display: none;">
+                <div class="header">
+                    <h2>Settings</h2>
+                    <p>Manage your account and preferences</p>
+                </div>
+
+                <div class="card">
+                    <h3>Account Information</h3>
+                    <p style="color: #64748b; margin-top: 8px;">Email: <span id="userEmail"></span></p>
+                    <p style="color: #64748b; margin-top: 8px;">Plan: <span id="userPlan">Free</span></p>
+                </div>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-        const SUPABASE_URL = 'https://zcezahdnvfaemarwdhdw.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjZXphaGRudmZhZW1hcndkaGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3NDg1NTYsImV4cCI6MjA3NzMyNDU1Nn0.jVzTKifZ8irV0_ObLmRBBxKgK8AS6Jq-YqgOauPtVM0';
+        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://zcezahdnvfaemarwdhdw.supabase.co';
+        const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjZXphaGRudmZhZW1hcndkaGR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3NDg1NTYsImV4cCI6MjA3NzMyNDU1Nn0.jVzTKifZ8irV0_ObLmRBBxKgK8AS6Jq-YqgOauPtVM0';
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
-
-        window.showTab = function(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById(tab + '-tab').classList.add('active');
-        };
+        let currentTenant = null;
 
         function showMessage(text, type) {
-            const msg = document.getElementById('message');
+            const msg = document.getElementById('authMessage');
             msg.textContent = text;
-            msg.className = 'message ' + type;
+            msg.className = `message ${type}`;
             setTimeout(() => msg.className = 'message', 5000);
         }
 
-        const positiveWords = new Set(['good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'awesome', 'love', 'best', 'perfect', 'happy', 'joy', 'beautiful']);
-        const negativeWords = new Set(['bad', 'terrible', 'awful', 'horrible', 'poor', 'worst', 'hate', 'disappointed', 'sad', 'angry', 'frustrating', 'annoying']);
-
-        function analyzeSentimentLocal(text) {
-            const words = text.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(w => w);
-            let positive = 0, negative = 0;
-
-            words.forEach(w => {
-                if (positiveWords.has(w)) positive++;
-                if (negativeWords.has(w)) negative++;
-            });
-
-            const total = positive + negative;
-            let score = total > 0 ? (positive - negative) / total : 0;
-            let label = Math.abs(score) < 0.3 ? 'neutral' : score > 0 ? 'positive' : 'negative';
-            let confidence = total > 0 ? Math.min(0.95, 0.6 + Math.abs(score) * 0.3) : 0.5;
-
-            return { score, label, confidence, wordCount: words.length, positive, negative };
-        }
-
-        window.analyzeSentiment = async function() {
-            const text = document.getElementById('textInput').value.trim();
-            if (!text) {
-                showMessage('Please enter some text', 'error');
-                return;
-            }
-
-            const result = analyzeSentimentLocal(text);
-
-            document.getElementById('result').style.display = 'block';
-            const badge = document.getElementById('sentimentBadge');
-            badge.textContent = result.label.charAt(0).toUpperCase() + result.label.slice(1);
-            badge.className = 'sentiment-badge ' + result.label;
-            document.getElementById('score').textContent = result.score.toFixed(3);
-            document.getElementById('confidence').textContent = (result.confidence * 100).toFixed(1) + '%';
-            document.getElementById('words').textContent = result.wordCount;
-
-            if (currentUser) {
-                try {
-                    await supabase.from('sentiment_analyses').insert([{
-                        user_id: currentUser.id,
-                        text_content: text,
-                        sentiment_score: result.score,
-                        sentiment_label: result.label,
-                        confidence: result.confidence,
-                        metadata: { word_count: result.wordCount, positive_words: result.positive, negative_words: result.negative }
-                    }]);
-                } catch (error) {
-                    console.error('Save failed:', error);
-                }
-            }
+        window.showLogin = () => {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('signupForm').style.display = 'none';
         };
 
-        window.signup = async function() {
-            const email = document.getElementById('signupEmail').value.trim();
-            const password = document.getElementById('signupPassword').value;
-
-            if (!email || !password) {
-                showMessage('Please fill all fields', 'error');
-                return;
-            }
-
-            if (password.length < 6) {
-                showMessage('Password must be at least 6 characters', 'error');
-                return;
-            }
-
-            try {
-                const { data, error } = await supabase.auth.signUp({ email, password });
-                if (error) throw error;
-
-                await supabase.from('users').insert([{
-                    id: data.user.id,
-                    email: data.user.email,
-                    subscription_tier: 'free',
-                    api_calls_remaining: 10
-                }]);
-
-                showMessage('Account created! Please sign in.', 'success');
-                showTab('login');
-            } catch (error) {
-                showMessage(error.message, 'error');
-            }
+        window.showSignup = () => {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
         };
 
-        window.login = async function() {
+        window.login = async () => {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
 
@@ -349,82 +569,191 @@
                 if (error) throw error;
 
                 currentUser = data.user;
-                showMessage('Logged in successfully!', 'success');
-                showTab('analyze');
+                await loadDashboard();
             } catch (error) {
                 showMessage(error.message, 'error');
             }
         };
 
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (session) {
-                currentUser = session.user;
-            }
-        });
+        window.signup = async () => {
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const orgName = document.getElementById('orgName').value.trim();
 
-        let selectedPlanTier = null;
-        let selectedPlanPrice = null;
-
-        window.selectPlan = function(tier, price) {
-            selectedPlanTier = tier;
-            selectedPlanPrice = price;
-
-            document.getElementById('pro-plan').style.borderColor = '#e2e8f0';
-            document.getElementById('pro-plan').style.background = 'white';
-            document.getElementById('enterprise-plan').style.borderColor = '#e2e8f0';
-            document.getElementById('enterprise-plan').style.background = 'white';
-
-            document.getElementById(tier + '-plan').style.borderColor = '#2563eb';
-            document.getElementById(tier + '-plan').style.background = 'rgba(37, 99, 235, 0.05)';
-        };
-
-        window.processStripePayment = async function() {
-            if (!currentUser) {
-                showMessage('Please login first to upgrade', 'error');
-                showTab('login');
+            if (!email || !password || !orgName) {
+                showMessage('Please fill all fields', 'error');
                 return;
             }
 
-            if (!selectedPlanTier) {
-                showMessage('Please select a plan', 'error');
+            if (password.length < 6) {
+                showMessage('Password must be at least 6 characters', 'error');
                 return;
             }
 
             try {
-                const btn = document.getElementById('paymentBtn');
-                btn.disabled = true;
-                btn.textContent = 'Processing...';
+                const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
+                if (authError) throw authError;
 
-                await supabase.from('payments').insert([{
-                    user_id: currentUser.id,
-                    amount: selectedPlanPrice,
-                    currency: 'usd',
-                    status: 'completed',
-                    subscription_tier: selectedPlanTier,
-                    stripe_payment_id: 'stripe_' + Date.now(),
-                    payment_method: 'stripe'
+                const freePlan = await supabase.table('subscription_plans').select('id').eq('slug', 'free').single();
+
+                const { data: tenantData, error: tenantError } = await supabase.table('tenants').insert([{
+                    name: orgName,
+                    billing_plan_id: freePlan.data.id
+                }]).select().single();
+
+                if (tenantError) throw tenantError;
+
+                await supabase.table('tenant_users').insert([{
+                    tenant_id: tenantData.id,
+                    user_id: authData.user.id,
+                    role: 'owner'
                 }]);
 
-                const newLimit = selectedPlanTier === 'pro' ? 1000 : 999999;
-                await supabase.from('users').update({
-                    subscription_tier: selectedPlanTier,
-                    api_calls_remaining: newLimit
-                }).eq('id', currentUser.id);
-
-                showMessage('Payment successful! Your plan has been upgraded.', 'success');
-                setTimeout(() => showTab('analyze'), 2000);
+                showMessage('Account created! Please sign in.', 'success');
+                showLogin();
             } catch (error) {
-                showMessage('Payment failed: ' + error.message, 'error');
-            } finally {
-                const btn = document.getElementById('paymentBtn');
-                btn.disabled = false;
-                btn.textContent = 'Proceed with Stripe Payment';
+                showMessage(error.message, 'error');
             }
+        };
+
+        window.logout = async () => {
+            await supabase.auth.signOut();
+            currentUser = null;
+            currentTenant = null;
+            document.getElementById('authPage').style.display = 'flex';
+            document.getElementById('dashboardPage').classList.remove('active');
+        };
+
+        async function loadDashboard() {
+            try {
+                const tenantUser = await supabase.table('tenant_users')
+                    .select('tenant_id')
+                    .eq('user_id', currentUser.id)
+                    .single();
+
+                if (!tenantUser.data) {
+                    showMessage('No tenant found for user', 'error');
+                    return;
+                }
+
+                currentTenant = tenantUser.data.tenant_id;
+
+                document.getElementById('authPage').style.display = 'none';
+                document.getElementById('dashboardPage').classList.add('active');
+                document.getElementById('userEmail').textContent = currentUser.email;
+
+                await loadAnalytics();
+                await loadFeedback();
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+                showMessage('Error loading dashboard', 'error');
+            }
+        }
+
+        async function loadAnalytics() {
+            try {
+                const feedback = await supabase.table('feedback_items')
+                    .select('sentiment, urgency, is_satisfied')
+                    .eq('tenant_id', currentTenant);
+
+                const total = feedback.data.length;
+                const positive = feedback.data.filter(f => f.sentiment === 'positive').length;
+                const negative = feedback.data.filter(f => f.sentiment === 'negative').length;
+                const highUrgency = feedback.data.filter(f => f.urgency === 'high').length;
+
+                document.getElementById('totalFeedback').textContent = total;
+                document.getElementById('positiveFeedback').textContent = positive;
+                document.getElementById('negativeFeedback').textContent = negative;
+                document.getElementById('highUrgency').textContent = highUrgency;
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+
+        async function loadFeedback() {
+            try {
+                const feedback = await supabase.table('feedback_items')
+                    .select('*')
+                    .eq('tenant_id', currentTenant)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                renderFeedbackList(feedback.data, 'recentFeedback');
+                renderFeedbackList(feedback.data, 'feedbackList');
+            } catch (error) {
+                console.error('Feedback error:', error);
+            }
+        }
+
+        function renderFeedbackList(items, containerId) {
+            const container = document.getElementById(containerId);
+
+            if (!items || items.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No feedback items yet</p></div>';
+                return;
+            }
+
+            container.innerHTML = items.map(item => `
+                <div class="feedback-item" onclick="viewFeedback('${item.id}')">
+                    <div class="feedback-header">
+                        <div>
+                            <div class="feedback-subject">${item.subject || 'No Subject'}</div>
+                            <div class="feedback-sender">${item.sender_email}</div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            ${item.is_satisfied ? '<span class="satisfied-mark">✓ Satisfied</span>' : ''}
+                            <span class="stat-badge badge-${item.sentiment}">${item.sentiment}</span>
+                            <span class="stat-badge badge-${item.urgency}">${item.urgency}</span>
+                        </div>
+                    </div>
+                    <div class="feedback-body">${(item.body_text || '').substring(0, 150)}${item.body_text && item.body_text.length > 150 ? '...' : ''}</div>
+                    <div class="feedback-meta">
+                        ${!item.is_satisfied ? `<button class="btn-small" onclick="event.stopPropagation(); markSatisfied('${item.id}')">Mark Satisfied</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.viewFeedback = (id) => {
+            console.log('View feedback:', id);
+        };
+
+        window.markSatisfied = async (id) => {
+            try {
+                await supabase.table('feedback_items')
+                    .update({ is_satisfied: true, status: 'closed', satisfied_at: new Date().toISOString(), satisfied_by: currentUser.id })
+                    .eq('id', id);
+
+                await loadAnalytics();
+                await loadFeedback();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        };
+
+        window.showSection = (section) => {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.getElementById('overviewSection').style.display = 'none';
+            document.getElementById('feedbackSection').style.display = 'none';
+            document.getElementById('integrationsSection').style.display = 'none';
+            document.getElementById('settingsSection').style.display = 'none';
+
+            document.getElementById(section + 'Section').style.display = 'block';
+        };
+
+        window.filterFeedback = (filter) => {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
         };
 
         (async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            if (session) currentUser = session.user;
+            if (session) {
+                currentUser = session.user;
+                await loadDashboard();
+            }
         })();
     </script>
 </body>

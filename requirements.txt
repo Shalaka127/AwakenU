@@ -3,3 +3,8 @@ uvicorn==0.37.0
 python-dotenv==1.0.0
 pydantic==2.11.9
 supabase==2.3.0
+transformers==4.36.0
+torch==2.1.0
+python-multipart==0.0.6
+email-validator==2.1.0
+html2text==2020.1.16
