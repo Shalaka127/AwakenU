@@ -1,12 +1,20 @@
 {
-  "name": "awakenu-sentiment-analyzer",
-  "version": "1.0.0",
+  "name": "awakenu-feedback-platform",
+  "version": "2.0.0",
   "type": "module",
   "main": "index.html",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "api": "python -m uvicorn api.main:app --reload --port 8000",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "chart.js": "^4.4.1",
+    "socket.io-client": "^4.6.1"
   },
   "devDependencies": {
     "vite": "^5.0.0"
